@@ -1,4 +1,7 @@
 {
   "item.upgradechestoverhaul.upgrader": "Upgrader",
+  "item.upgradechestoverhaul.base_upgrader": "Base Upgrader",
+  "item.upgradechestoverhaul.upgrader_tier_1": "Upgrader Tier 1",
+  "item.upgradechestoverhaul.upgrader_tier_2": "Upgrader Tier 2",
   "itemGroup.upgradechestoverhaulModTab": "Storage Upgrades"
 }

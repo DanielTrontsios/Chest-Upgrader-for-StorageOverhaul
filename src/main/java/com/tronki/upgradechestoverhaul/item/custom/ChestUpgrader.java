@@ -83,8 +83,12 @@ public class ChestUpgrader extends Item {
     }
 
     // Otherwise work only on the specific tier of the item
-    ChestTier clickedChestTier = ((ModChestBlock) clickedBlock.getBlock()).getTier();
-    return clickedBlock.getBlock() instanceof ModChestBlock && clickedChestTier == this.upgraderTier;
+    if (clickedBlock.getBlock() instanceof ModChestBlock) {
+      ChestTier clickedChestTier = ((ModChestBlock) clickedBlock.getBlock()).getTier();
+      return clickedChestTier == this.upgraderTier;
+    }
+
+    return false;
   }
 
   public static void upgradeChest(PlayerEntity entity, BlockState clickedBlock, BlockPos clickedPos, World world,

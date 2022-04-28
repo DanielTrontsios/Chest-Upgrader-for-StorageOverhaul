@@ -6,10 +6,10 @@
       "tag": "minecraft:planks"
     },
     "I": {
-      "tag": "forge:gems/diamond"
+      "tag": "forge:ingots/iron"
     }
   },
   "result": {
-    "item": "upgradechestoverhaul:upgrader_tier_2"
+    "item": "upgradechestoverhaul:base_upgrader"
   }
 }

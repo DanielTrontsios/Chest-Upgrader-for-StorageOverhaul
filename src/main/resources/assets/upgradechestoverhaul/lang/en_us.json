@@ -3,5 +3,9 @@
   "item.upgradechestoverhaul.base_upgrader": "Base Upgrader",
   "item.upgradechestoverhaul.upgrader_tier_1": "Upgrader Tier 1",
   "item.upgradechestoverhaul.upgrader_tier_2": "Upgrader Tier 2",
-  "itemGroup.upgradechestoverhaulModTab": "Storage Upgrades"
+  "itemGroup.upgradechestoverhaulModTab": "Storage Upgrades",
+  "item.upgradechestoverhaul.barrel_upgrader": "Barrel Upgrader",
+  "item.upgradechestoverhaul.barrel_base_upgrader": "Barrel Base Upgrader",
+  "item.upgradechestoverhaul.barrel_upgrader_tier_1": "Barrel Upgrader Tier 1",
+  "item.upgradechestoverhaul.barrel_upgrader_tier_2": "Barrel Upgrader Tier 2"
 }

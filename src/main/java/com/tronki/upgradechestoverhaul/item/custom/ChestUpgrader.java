@@ -117,7 +117,7 @@ public class ChestUpgrader extends Item {
     }
 
     // Assign the new Upgraded chest to a local var to place it in the world later
-    BlockState newChest = ExtendedModBlocks.MODBLOCK_BY_MAP.get(nextTier)
+    BlockState newChest = ExtendedModBlocks.CHESTBLOCK_BY_MAP.get(nextTier)
         .defaultBlockState().setValue(FACING, direction);
 
     // Remove existing chest and its tileEntity

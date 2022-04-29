@@ -1,6 +1,7 @@
 package com.tronki.upgradechestoverhaul.item;
 
 import com.tronki.upgradechestoverhaul.UpgradeChestOverhaul;
+import com.tronki.upgradechestoverhaul.item.custom.BarrelUpgrader;
 import com.tronki.upgradechestoverhaul.item.custom.ChestUpgrader;
 
 import de.maxhenkel.storage.ChestTier;
@@ -27,6 +28,20 @@ public class ModItems {
   public static final RegistryObject<Item> UPGRADER_TIER_2 = ITEMS.register(
       "upgrader_tier_2",
       () -> new ChestUpgrader(ChestTier.TIER_2));
+
+  // CREATE BARREL UPGRADERS
+  public static final RegistryObject<Item> BARREL_UPGRADER = ITEMS.register(
+      "barrel_upgrader",
+      () -> new BarrelUpgrader());
+  public static final RegistryObject<Item> BARREL_BASE_UPGRADER = ITEMS.register(
+      "barrel_base_upgrader",
+      () -> new BarrelUpgrader(ChestTier.BASE_TIER));
+  public static final RegistryObject<Item> BARREL_UPGRADER_TIER_1 = ITEMS.register(
+      "barrel_upgrader_tier_1",
+      () -> new BarrelUpgrader(ChestTier.TIER_1));
+  public static final RegistryObject<Item> BARREL_UPGRADER_TIER_2 = ITEMS.register(
+      "barrel_upgrader_tier_2",
+      () -> new BarrelUpgrader(ChestTier.TIER_2));
 
   public static void register(IEventBus eventBus) {
     ITEMS.register(eventBus);

@@ -5,6 +5,7 @@ import java.lang.reflect.Method;
 import java.util.Objects;
 
 import com.tronki.upgradechestoverhaul.block.ExtendedModBlocks;
+import com.tronki.upgradechestoverhaul.item.ModItemGroup;
 
 import de.maxhenkel.storage.ChestTier;
 import de.maxhenkel.storage.blocks.ModBarrelBlock;
@@ -34,7 +35,7 @@ public class BarrelUpgrader extends Item {
 
   public static final BooleanProperty WATERLOGGED = BlockStateProperties.WATERLOGGED;
 
-  private static final Properties PROPS = new Item.Properties().stacksTo(64).tab(ItemGroup.TAB_MISC);
+  private static final Properties PROPS = new Item.Properties().stacksTo(64).tab(ModItemGroup.TAB_STORAGE_UPGRADES);
 
   private ChestTier upgraderTier;
 

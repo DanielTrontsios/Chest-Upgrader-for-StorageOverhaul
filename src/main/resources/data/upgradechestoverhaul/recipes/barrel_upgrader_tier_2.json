@@ -1,0 +1,15 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": ["#I#", "###", "###"],
+  "key": {
+    "#": {
+      "tag": "minecraft:wooden_slabs"
+    },
+    "I": {
+      "tag": "forge:gems/diamond"
+    }
+  },
+  "result": {
+    "item": "upgradechestoverhaul:barrel_upgrader_tier_2"
+  }
+}

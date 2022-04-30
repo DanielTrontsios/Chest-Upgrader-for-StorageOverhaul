@@ -120,6 +120,16 @@ repositories {
             includeGroup "curse.maven"
         }
     }
+    maven {
+      // location of the maven that hosts JEI files
+      name = "Progwml6 maven"
+      url = "https://dvs1.progwml6.com/files/maven/"
+    }
+    maven {
+      // location of a maven mirror for JEI files, as a fallback
+      name = "ModMaven"
+      url = "https://modmaven.dev"
+    }
 }
 
 dependencies {
@@ -127,10 +137,14 @@ dependencies {
     // that the dep is a ForgeGradle 'patcher' dependency. And it's patches will be applied.
     // The userdev artifact is a special name and will get all sorts of transformations applied to it.
     minecraft 'net.minecraftforge:forge:1.16.5-36.2.34'
-    compileOnly fg.deobf("curse.maven:jei-238222:3681294")
-    runtimeOnly fg.deobf("curse.maven:jei-238222:3681294")
 
-    implementation fg.deobf("curse.maven:overhaulStorage-382599:3283097")
+    // compile against the JEI API but do not include it at runtime
+    compileOnly fg.deobf("mezz.jei:jei-${mc_version}:${jei_version}:api")
+    // at runtime, use the full JEI jar
+    runtimeOnly fg.deobf("mezz.jei:jei-${mc_version}:${jei_version}")
+
+    compileOnly fg.deobf("curse.maven:overhaulStorage-382599:3283097")
+    runtimeOnly fg.deobf("curse.maven:overhaulStorage-382599:3283097")
 
     // You may put jars on which you depend on in ./libs or you may define them like so..
     // compile "some.group:artifact:version:classifier"

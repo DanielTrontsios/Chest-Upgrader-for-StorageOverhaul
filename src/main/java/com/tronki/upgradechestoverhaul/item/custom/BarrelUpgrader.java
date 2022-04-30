@@ -12,11 +12,9 @@ import de.maxhenkel.storage.blocks.ModBarrelBlock;
 import de.maxhenkel.storage.blocks.tileentity.ModBarrelTileEntity;
 
 import net.minecraft.block.BlockState;
-import net.minecraft.block.HorizontalBlock;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
-import net.minecraft.item.ItemGroup;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.ItemUseContext;
 import net.minecraft.state.BooleanProperty;
@@ -75,6 +73,7 @@ public class BarrelUpgrader extends Item {
         upgradeBarrel(playerEntity, clickedBlock, clickedPos, world, context, stack);
       } catch (Exception e) {
         e.printStackTrace();
+        mc.player.chat(e.toString());
       }
     }
   }
@@ -82,6 +81,7 @@ public class BarrelUpgrader extends Item {
   private boolean blockIsBarrelAndUpgradable(TileEntity clickedBlockEntity) {
     // If Barrel doesn't have a tier assigned to it, it means that is the
     // debug/creative item and needs to work on all Barrel types
+    mc.player.chat("ln83: " + clickedBlockEntity.getClass().toString());
     if (this.upgraderTier == null) {
       return clickedBlockEntity instanceof ModBarrelTileEntity;
     }
@@ -101,6 +101,7 @@ public class BarrelUpgrader extends Item {
 
     // Get Next Tier
     String nextTier = ((ModBarrelBlock) clickedBlock.getBlock()).getRegistryName().toString();
+    mc.player.chat("ln103: " + nextTier);
     // Get Direction
     Direction direction = clickedBlock.getValue(FACING);
     // Get Barrel Tile Entity (Used in getting the current items in the Barrel)
@@ -150,6 +151,9 @@ public class BarrelUpgrader extends Item {
       ModBarrelTileEntity BarrelTileEntity)
       throws NoSuchMethodException, SecurityException, IllegalAccessException, IllegalArgumentException,
       InvocationTargetException {
+    for (Method methods : BarrelEntityClass.getDeclaredMethods()) {
+      mc.player.chat(methods.getName());
+    }
     Method getItems = BarrelEntityClass.getDeclaredMethod("getItems");
     getItems.setAccessible(true);
 

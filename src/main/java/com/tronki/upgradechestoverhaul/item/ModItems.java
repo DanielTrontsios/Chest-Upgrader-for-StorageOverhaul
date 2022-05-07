@@ -16,17 +16,17 @@ public class ModItems {
       ForgeRegistries.ITEMS,
       UpgradeChestOverhaul.MOD_ID);
 
-  public static final RegistryObject<Item> UPGRADER = ITEMS.register(
-      "upgrader",
+  public static final RegistryObject<Item> CHEST_UPGRADER = ITEMS.register(
+      "chest_upgrader",
       () -> new ChestUpgrader());
-  public static final RegistryObject<Item> BASE_UPGRADER = ITEMS.register(
-      "base_upgrader",
+  public static final RegistryObject<Item> CHEST_BASE_UPGRADER = ITEMS.register(
+      "chest_base_upgrader",
       () -> new ChestUpgrader(ChestTier.BASE_TIER));
-  public static final RegistryObject<Item> UPGRADER_TIER_1 = ITEMS.register(
-      "upgrader_tier_1",
+  public static final RegistryObject<Item> CHEST_UPGRADER_TIER_1 = ITEMS.register(
+      "chest_upgrader_tier_1",
       () -> new ChestUpgrader(ChestTier.TIER_1));
-  public static final RegistryObject<Item> UPGRADER_TIER_2 = ITEMS.register(
-      "upgrader_tier_2",
+  public static final RegistryObject<Item> CHEST_UPGRADER_TIER_2 = ITEMS.register(
+      "chest_upgrader_tier_2",
       () -> new ChestUpgrader(ChestTier.TIER_2));
 
   // CREATE BARREL UPGRADERS

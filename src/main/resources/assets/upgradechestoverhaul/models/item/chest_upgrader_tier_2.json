@@ -1,0 +1,6 @@
+{
+  "parent": "item/generated",
+  "textures": {
+    "layer0": "upgradechestoverhaul:item/chest_upgrader_tier_2"
+  }
+}

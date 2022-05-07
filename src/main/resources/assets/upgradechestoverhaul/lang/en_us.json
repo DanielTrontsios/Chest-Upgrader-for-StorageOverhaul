@@ -1,9 +1,9 @@
 {
-  "item.upgradechestoverhaul.upgrader": "Upgrader",
-  "item.upgradechestoverhaul.base_upgrader": "Base Upgrader",
-  "item.upgradechestoverhaul.upgrader_tier_1": "Upgrader Tier 1",
-  "item.upgradechestoverhaul.upgrader_tier_2": "Upgrader Tier 2",
   "itemGroup.upgradechestoverhaulModTab": "Storage Upgrades",
+  "item.upgradechestoverhaul.chest_upgrader": "Chest Upgrader",
+  "item.upgradechestoverhaul.chest_base_upgrader": "Chest Base Upgrader",
+  "item.upgradechestoverhaul.chest_upgrader_tier_1": "Chest Upgrader Tier 1",
+  "item.upgradechestoverhaul.chest_upgrader_tier_2": "Chest Upgrader Tier 2",
   "item.upgradechestoverhaul.barrel_upgrader": "Barrel Upgrader",
   "item.upgradechestoverhaul.barrel_base_upgrader": "Barrel Base Upgrader",
   "item.upgradechestoverhaul.barrel_upgrader_tier_1": "Barrel Upgrader Tier 1",

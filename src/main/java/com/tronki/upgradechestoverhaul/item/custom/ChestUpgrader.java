@@ -1,7 +1,5 @@
 package com.tronki.upgradechestoverhaul.item.custom;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.Objects;
 
 import com.tronki.upgradechestoverhaul.block.ExtendedModBlocks;
@@ -25,8 +23,10 @@ import net.minecraft.util.Direction;
 import net.minecraft.util.NonNullList;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
+import net.minecraftforge.common.util.LazyOptional;
+import net.minecraftforge.items.CapabilityItemHandler;
+import net.minecraftforge.items.IItemHandler;
 
-@SuppressWarnings("unchecked")
 public class ChestUpgrader extends Item {
   public static Minecraft mc = Minecraft.getInstance();
   public static final DirectionProperty FACING = HorizontalBlock.FACING;
@@ -92,8 +92,7 @@ public class ChestUpgrader extends Item {
   }
 
   public static void upgradeChest(PlayerEntity entity, BlockState clickedBlock, BlockPos clickedPos, World world,
-      ItemUseContext context, ItemStack stack) throws NoSuchMethodException, SecurityException, IllegalAccessException,
-      IllegalArgumentException, InvocationTargetException {
+      ItemUseContext context, ItemStack stack) {
 
     // Get Next Tier
     String nextTier = ((ModChestBlock) clickedBlock.getBlock()).getRegistryName().toString();
@@ -102,75 +101,74 @@ public class ChestUpgrader extends Item {
     // Get Chest Tile Entity (Used in getting the current items in the chest)
     ModChestTileEntity chestTileEntity = (ModChestTileEntity) world.getBlockEntity(clickedPos);
 
-    // Store the class of the Chest's tile entity to use it in the reflections of
-    // getItems() and setItems()
-    Class<?> chestEntityClass = chestTileEntity.getClass();
-
-    // Get the Items of the Chest Tile Entity of the clicked block
-    // Parent method is marked as protected and so we have to reflect it, in order
-    // to access it
-    NonNullList<ItemStack> chestContents = reflectedGetItems(chestEntityClass, chestTileEntity);
-
     if (nextTier == null) {
       mc.player.chat("This chest is either max tier or can't be upgraded.");
       return;
     }
 
-    // Assign the new Upgraded chest to a local var to place it in the world later
+    // Some Parent methods are marked as protected and so we have to use the
+    // IItemHandler, in order to get and set the contents of the conteiner
+    LazyOptional<IItemHandler> firstItemHandler = chestTileEntity
+        .getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY);
+
+    firstItemHandler.ifPresent(handler -> {
+      changeBlockEntity(handler, nextTier, direction, world, clickedPos, stack);
+    });
+  }
+
+  public static void changeBlockEntity(IItemHandler handler, String nextTier, Direction direction, World world,
+      BlockPos clickedPos, ItemStack stack) {
+    // Get the Items of the Chest Tile Entity of the clicked block
+    NonNullList<ItemStack> containerContents = reflectedGetItems(handler);
+
+    // Assign the new Upgraded Chest to a local var to place it in the world later
     BlockState newChest = ExtendedModBlocks.CHESTBLOCK_BY_MAP.get(nextTier)
         .defaultBlockState().setValue(FACING, direction);
 
-    // Remove existing chest and its tileEntity
+    // Remove existing Chest and its tileEntity
     world.removeBlockEntity(clickedPos);
     world.removeBlock(clickedPos, false);
 
-    // Add Updated chest back to world
+    // Add Updated Chest back to world
     world.setBlock(clickedPos, newChest, 1);
 
-    // Update the Chest Tile Entity var so we have the entity of the upgraded chest
-    // (We use this, to set the items of the chest back to the privious ones)
-    chestTileEntity = (ModChestTileEntity) world.getBlockEntity(clickedPos);
-    ChestTier upgradedChestTier = ((ModChestBlock) world.getBlockState(clickedPos).getBlock()).getTier();
+    // Update the Chest Tile Entity var so we have the entity of the upgraded
+    // Chest
+    // (We use this, to set the items of the Chest back to the privious ones)
+    ModChestTileEntity upgradedChestTileEntity = (ModChestTileEntity) world.getBlockEntity(clickedPos);
+    ChestTier upgradedChestTier = upgradedChestTileEntity.getTier();
 
-    // Add items from previous chest back into the upgraded one
-    reflectedSetItems(chestEntityClass, chestTileEntity, upgradedChestTier, chestContents);
+    LazyOptional<IItemHandler> upgradedItemHandler = upgradedChestTileEntity
+        .getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY);
 
-    world.blockEntityChanged(clickedPos, chestTileEntity);
+    upgradedItemHandler.ifPresent(upgradedHandler -> {
+      reflectedSetItems(upgradedHandler, upgradedChestTier, containerContents);
 
-    // Damage item
-    stack.shrink(1);
+      world.blockEntityChanged(clickedPos, upgradedChestTileEntity);
+
+      // Damage item
+      stack.shrink(1);
+    });
   }
 
-  public static NonNullList<ItemStack> reflectedGetItems(Class<?> chestEntityClass, ModChestTileEntity chestTileEntity)
-      throws NoSuchMethodException, SecurityException, IllegalAccessException, IllegalArgumentException,
-      InvocationTargetException {
-    Method getItems = chestEntityClass.getDeclaredMethod("getItems");
-    getItems.setAccessible(true);
-
-    if (getItems.invoke(chestTileEntity) instanceof NonNullList<?>) {
-      return (NonNullList<ItemStack>) getItems.invoke(chestTileEntity);
+  public static NonNullList<ItemStack> reflectedGetItems(IItemHandler handler) {
+    NonNullList<ItemStack> containerContents = NonNullList.<ItemStack>withSize(handler.getSlots(),
+        ItemStack.EMPTY);
+    for (int slot = 0; slot < handler.getSlots(); slot++) {
+      ItemStack currentItemStack = handler.getStackInSlot(slot);
+      containerContents.set(slot, currentItemStack);
     }
 
-    return null;
+    return containerContents;
   }
 
-  public static void reflectedSetItems(Class<?> chestEntityClass, ModChestTileEntity chestTileEntity,
-      ChestTier upgradedChestTier,
-      NonNullList<ItemStack> chestContents) throws IllegalAccessException, IllegalArgumentException,
-      InvocationTargetException, NoSuchMethodException, SecurityException {
-
-    Method setItems = chestEntityClass.getDeclaredMethod("setItems", NonNullList.class);
-    setItems.setAccessible(true);
-
-    NonNullList<ItemStack> upgradedChestContents = NonNullList.<ItemStack>withSize(upgradedChestTier.numSlots(),
-        ItemStack.EMPTY);
-
-    for (int i = 0; i < chestContents.size(); i++) {
-      if (i < chestContents.size()) {
-        upgradedChestContents.set(i, chestContents.get(i));
+  public static void reflectedSetItems(IItemHandler upgradedHandler, ChestTier upgradedChestTier,
+      NonNullList<ItemStack> containerContents) {
+    for (int slot = 0; slot < containerContents.size(); slot++) {
+      if (slot < containerContents.size()) {
+        upgradedHandler.insertItem(slot, containerContents.get(slot), false);
       }
     }
-
-    setItems.invoke(chestTileEntity, upgradedChestContents);
   }
+
 }

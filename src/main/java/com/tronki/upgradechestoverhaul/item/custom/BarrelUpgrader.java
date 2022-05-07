@@ -1,7 +1,5 @@
 package com.tronki.upgradechestoverhaul.item.custom;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.Objects;
 
 import com.tronki.upgradechestoverhaul.block.ExtendedModBlocks;
@@ -26,6 +24,9 @@ import net.minecraft.util.Direction;
 import net.minecraft.util.NonNullList;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
+import net.minecraftforge.common.util.LazyOptional;
+import net.minecraftforge.items.CapabilityItemHandler;
+import net.minecraftforge.items.IItemHandler;
 
 public class BarrelUpgrader extends Item {
   public static Minecraft mc = Minecraft.getInstance();
@@ -69,19 +70,13 @@ public class BarrelUpgrader extends Item {
       PlayerEntity playerEntity,
       World world, ItemStack stack) {
     if (blockIsBarrelAndUpgradable(clickedBlockEntity)) {
-      try {
-        upgradeBarrel(playerEntity, clickedBlock, clickedPos, world, context, stack);
-      } catch (Exception e) {
-        e.printStackTrace();
-        mc.player.chat(e.toString());
-      }
+      upgradeBarrel(playerEntity, clickedBlock, clickedPos, world, context, stack);
     }
   }
 
   private boolean blockIsBarrelAndUpgradable(TileEntity clickedBlockEntity) {
     // If Barrel doesn't have a tier assigned to it, it means that is the
     // debug/creative item and needs to work on all Barrel types
-    mc.player.chat("ln83: " + clickedBlockEntity.getClass().toString());
     if (this.upgraderTier == null) {
       return clickedBlockEntity instanceof ModBarrelTileEntity;
     }
@@ -96,30 +91,35 @@ public class BarrelUpgrader extends Item {
   }
 
   public static void upgradeBarrel(PlayerEntity entity, BlockState clickedBlock, BlockPos clickedPos, World world,
-      ItemUseContext context, ItemStack stack) throws NoSuchMethodException, SecurityException, IllegalAccessException,
-      IllegalArgumentException, InvocationTargetException {
+      ItemUseContext context, ItemStack stack) {
 
     // Get Next Tier
     String nextTier = ((ModBarrelBlock) clickedBlock.getBlock()).getRegistryName().toString();
-    mc.player.chat("ln103: " + nextTier);
     // Get Direction
     Direction direction = clickedBlock.getValue(FACING);
     // Get Barrel Tile Entity (Used in getting the current items in the Barrel)
     ModBarrelTileEntity BarrelTileEntity = (ModBarrelTileEntity) world.getBlockEntity(clickedPos);
 
-    // Store the class of the Barrel's tile entity to use it in the reflections of
-    // getItems() and setItems()
-    Class<?> BarrelEntityClass = BarrelTileEntity.getClass();
-
-    // Get the Items of the Barrel Tile Entity of the clicked block
-    // Parent method is marked as protected and so we have to reflect it, in order
-    // to access it
-    NonNullList<ItemStack> BarrelContents = reflectedGetItems(BarrelEntityClass, BarrelTileEntity);
-
     if (nextTier == null) {
       mc.player.chat("This Barrel is either max tier or can't be upgraded.");
       return;
     }
+
+    // Some Parent methods are marked as protected and so we have to use the
+    // IItemHandler, in order to get and set the contents of the conteiner
+    LazyOptional<IItemHandler> firstItemHandler = BarrelTileEntity
+        .getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY);
+
+    firstItemHandler.ifPresent(handler -> {
+      changeBlockEntity(handler, nextTier, direction, world, clickedPos, stack);
+    });
+
+  }
+
+  public static void changeBlockEntity(IItemHandler handler, String nextTier, Direction direction, World world,
+      BlockPos clickedPos, ItemStack stack) {
+    // Get the Items of the Barrel Tile Entity of the clicked block
+    NonNullList<ItemStack> barrelContents = reflectedGetItems(handler);
 
     // Assign the new Upgraded Barrel to a local var to place it in the world later
     BlockState newBarrel = ExtendedModBlocks.BARRELBLOCK_BY_MAP.get(nextTier)
@@ -135,52 +135,40 @@ public class BarrelUpgrader extends Item {
     // Update the Barrel Tile Entity var so we have the entity of the upgraded
     // Barrel
     // (We use this, to set the items of the Barrel back to the privious ones)
-    BarrelTileEntity = (ModBarrelTileEntity) world.getBlockEntity(clickedPos);
-    ChestTier upgradedChestTier = BarrelTileEntity.getTier();
+    ModBarrelTileEntity upgradedBarrelTileEntity = (ModBarrelTileEntity) world.getBlockEntity(clickedPos);
+    ChestTier upgradedChestTier = upgradedBarrelTileEntity.getTier();
 
-    // Add items from previous Barrel back into the upgraded one
-    reflectedSetItems(BarrelEntityClass, BarrelTileEntity, upgradedChestTier, BarrelContents);
+    LazyOptional<IItemHandler> upgradedItemHandler = upgradedBarrelTileEntity
+        .getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY);
 
-    world.blockEntityChanged(clickedPos, BarrelTileEntity);
+    upgradedItemHandler.ifPresent(upgradedHandler -> {
+      reflectedSetItems(upgradedHandler, upgradedChestTier, barrelContents);
 
-    // Damage item
-    stack.shrink(1);
+      world.blockEntityChanged(clickedPos, upgradedBarrelTileEntity);
+
+      // Damage item
+      stack.shrink(1);
+    });
   }
 
-  public static NonNullList<ItemStack> reflectedGetItems(Class<?> BarrelEntityClass,
-      ModBarrelTileEntity BarrelTileEntity)
-      throws NoSuchMethodException, SecurityException, IllegalAccessException, IllegalArgumentException,
-      InvocationTargetException {
-    for (Method methods : BarrelEntityClass.getDeclaredMethods()) {
-      mc.player.chat(methods.getName());
-    }
-    Method getItems = BarrelEntityClass.getDeclaredMethod("getItems");
-    getItems.setAccessible(true);
-
-    if (getItems.invoke(BarrelTileEntity) instanceof NonNullList<?>) {
-      return (NonNullList<ItemStack>) getItems.invoke(BarrelTileEntity);
-    }
-
-    return null;
-  }
-
-  public static void reflectedSetItems(Class<?> BarrelEntityClass, ModBarrelTileEntity BarrelTileEntity,
-      ChestTier upgradedChestTier,
-      NonNullList<ItemStack> BarrelContents) throws IllegalAccessException, IllegalArgumentException,
-      InvocationTargetException, NoSuchMethodException, SecurityException {
-
-    Method setItems = BarrelEntityClass.getDeclaredMethod("setItems", NonNullList.class);
-    setItems.setAccessible(true);
-
-    NonNullList<ItemStack> upgradedBarrelContents = NonNullList.<ItemStack>withSize(upgradedChestTier.numSlots(),
+  public static NonNullList<ItemStack> reflectedGetItems(IItemHandler handler) {
+    NonNullList<ItemStack> barrelContents = NonNullList.<ItemStack>withSize(handler.getSlots(),
         ItemStack.EMPTY);
+    for (int slot = 0; slot < handler.getSlots(); slot++) {
+      ItemStack currentItemStack = handler.getStackInSlot(slot);
+      barrelContents.set(slot, currentItemStack);
+    }
 
-    for (int i = 0; i < BarrelContents.size(); i++) {
-      if (i < BarrelContents.size()) {
-        upgradedBarrelContents.set(i, BarrelContents.get(i));
+    return barrelContents;
+  }
+
+  public static void reflectedSetItems(IItemHandler upgradedHandler, ChestTier upgradedChestTier,
+      NonNullList<ItemStack> barrelContents) {
+
+    for (int slot = 0; slot < barrelContents.size(); slot++) {
+      if (slot < barrelContents.size()) {
+        upgradedHandler.insertItem(slot, barrelContents.get(slot), false);
       }
     }
-
-    setItems.invoke(BarrelTileEntity, upgradedBarrelContents);
   }
 }
